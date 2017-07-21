@@ -46,3 +46,4 @@ class hero(pygame.sprite.Sprite):
             self.rect.right += 10
         else:
             self.rect.right = self.bgWidth
+

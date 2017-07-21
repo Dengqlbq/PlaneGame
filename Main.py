@@ -1,5 +1,6 @@
 import pygame
 from Hero import hero
+from Enemy import smallEnemy, midEnemy, bigEnemy
 import sys
 
 pygame.init()
@@ -15,13 +16,30 @@ pygame.mixer.music.load('Sound/game_music.ogg')
 pygame.mixer.music.set_volume(3)
 
 
-
+# 将飞机加入碰撞组
+def addEnemy(size, group1, group2, number):
+    for n in range(number):
+        if size == 'small':
+            e = smallEnemy(backGroundSite)
+        elif size == 'mid':
+            e = midEnemy(backGroundSite)
+        else:
+            e = bigEnemy(backGroundSite)
+        group1.add(e)
+        group2.add(e)
 
 def main():
     # 产生飞机
     me = hero(backGroundSite)
+    enemies = pygame.sprite.Group()
+    smallEnemys = pygame.sprite.Group()
+    midEnemys = pygame.sprite.Group()
+    bigEnemys = pygame.sprite.Group()
+    addEnemy('small', smallEnemys, enemies, 15)
+    addEnemy('mid', midEnemys, enemies, 5)
+    addEnemy('big', bigEnemys, enemies, 3)
 
-    # 计时器，判断是否切换我放飞机图片
+    # 计时器，判断是否切换我方飞机图片以及大型敌机图片
     timeToChange = 100
 
     pygame.mixer.music.play(3)
@@ -29,6 +47,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
+
         #获取键盘输入
         keyPress = pygame.key.get_pressed()
         if keyPress[pygame.K_UP] or keyPress[pygame.K_w]:
@@ -43,11 +62,21 @@ def main():
         timeToChange -= 1
         if timeToChange % 5 == 0:
             me.setStatus()
+            for each in bigEnemys:
+                each.setStatus()
         if timeToChange == 0:
             timeToChange = 100
 
-
         screen.blit(backGround, (0, 0))
+        # 飞机绘制顺序，大-》中-》小
+        for each in enemies:
+            each.move()
+        for each in bigEnemys:
+            screen.blit(each.getImage(), each.rect)
+        for each in midEnemys:
+            screen.blit(each.getImage(), each.rect)
+        for each in smallEnemys:
+            screen.blit(each.getImage(), each.rect)
         screen.blit(me.getImage(), me.rect)
         pygame.display.flip()
 
