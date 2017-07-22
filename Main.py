@@ -62,20 +62,36 @@ def main():
         timeToChange -= 1
         if timeToChange % 5 == 0:
             me.setStatus()
+            # 加上判断存活的语句反而消耗更多资源，故不管死活直接更改，类内会进行判断
             for each in bigEnemys:
                 each.setStatus()
         if timeToChange == 0:
             timeToChange = 100
 
+        enemiesDown = pygame.sprite.spritecollide(me, enemies, False, pygame.sprite.collide_mask)
+        for each in enemiesDown:
+            each.active = False
+
         screen.blit(backGround, (0, 0))
+
         # 飞机绘制顺序，大-》中-》小
-        for each in enemies:
-            each.move()
         for each in bigEnemys:
+            if each.active:
+                each.move()
+            if each.desComplete(timeToChange % 5 == 0):
+                each.reset()
             screen.blit(each.getImage(), each.rect)
         for each in midEnemys:
+            if each.active:
+                each.move()
+            if each.desComplete(timeToChange % 5 == 0):
+                each.reset()
             screen.blit(each.getImage(), each.rect)
         for each in smallEnemys:
+            if each.active:
+                each.move()
+            if each.desComplete(timeToChange % 5 == 0):
+                each.reset()
             screen.blit(each.getImage(), each.rect)
         screen.blit(me.getImage(), me.rect)
         pygame.display.flip()

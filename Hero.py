@@ -8,6 +8,7 @@ class hero(pygame.sprite.Sprite):
         self.image2 = pygame.image.load('Image/hero2.png').convert_alpha()
         self.status = True
         self.speed = 10
+        self.mask = pygame.mask.from_surface(self.image1)
         self.rect = self.image1.get_rect()
         self.bgWidth, self.bgHeight = backGroundSite
         self.rect.left, self.rect.top = (self.bgWidth - self.rect.width)/2, self.bgHeight - self.rect.height - 60
