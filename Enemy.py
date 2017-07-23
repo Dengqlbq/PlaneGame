@@ -34,6 +34,9 @@ class smallEnemy(pygame.sprite.Sprite):
         else:
             self.reset()
 
+    def desStart(self):
+        return self.destroyIndex == 0
+
     def desComplete(self, desChange=False):
         if desChange and not self.active:
             self.destroyIndex += 1
@@ -77,6 +80,9 @@ class midEnemy(pygame.sprite.Sprite):
             self.rect.top += self.speed
         else:
             self.reset()
+
+    def desStart(self):
+        return self.destroyIndex == 0
 
     def desComplete(self, desChange=False):
         if desChange and not self.active:
@@ -128,6 +134,9 @@ class bigEnemy(pygame.sprite.Sprite):
 
     def setStatus(self):
         self.status = not self.status
+
+    def desStart(self):
+        return self.destroyIndex == 0
 
     def desComplete(self, desChange=False):
         if desChange and not self.active:

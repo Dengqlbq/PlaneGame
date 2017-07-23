@@ -6,17 +6,29 @@ import sys
 pygame.init()
 pygame.mixer.init()
 
+# 背景尺寸及图片
 backGroundSite = (400, 852)
 screen = pygame.display.set_mode(backGroundSite)
 pygame.display.set_caption('PlaneGame')
 backGround = pygame.image.load('Image/background.png').convert()
 
-# 不支持MP3 用 OGG格式
+# 背景音乐，不支持MP3用OGG格式
 pygame.mixer.music.load('Sound/game_music.ogg')
 pygame.mixer.music.set_volume(3)
 
+# 飞机相关背景音效
+smallEnemyDown = pygame.mixer.Sound('Sound/small_enemy_down.ogg')
+smallEnemyDown.set_volume(2)
+midEnemyDown = pygame.mixer.Sound('Sound/mid_enemy_down.ogg')
+midEnemyDown.set_volume(3)
+bigEnemyDown = pygame.mixer.Sound('Sound/big_enemy_down.ogg')
+bigEnemyDown.set_volume(3)
+bigEnemyFlying = pygame.mixer.Sound('Sound/big_enemy_flying.ogg')
+bigEnemyFlying.set_volume(2)
+
 
 # 将飞机加入碰撞组
+
 def addEnemy(size, group1, group2, number):
     for n in range(number):
         if size == 'small':
@@ -28,16 +40,23 @@ def addEnemy(size, group1, group2, number):
         group1.add(e)
         group2.add(e)
 
+
 def main():
+
+    # 控制飞机数量
+    smallEnemyNum = 10
+    midEnemyNum = 5
+    bigEnemyNum = 1
+
     # 产生飞机
     me = hero(backGroundSite)
     enemies = pygame.sprite.Group()
     smallEnemys = pygame.sprite.Group()
     midEnemys = pygame.sprite.Group()
     bigEnemys = pygame.sprite.Group()
-    addEnemy('small', smallEnemys, enemies, 15)
-    addEnemy('mid', midEnemys, enemies, 5)
-    addEnemy('big', bigEnemys, enemies, 3)
+    addEnemy('small', smallEnemys, enemies, smallEnemyNum)
+    addEnemy('mid', midEnemys, enemies, midEnemyNum)
+    addEnemy('big', bigEnemys, enemies, bigEnemyNum)
 
     # 计时器，判断是否切换我方飞机图片以及大型敌机图片
     timeToChange = 100
@@ -78,21 +97,41 @@ def main():
         for each in bigEnemys:
             if each.active:
                 each.move()
-            if each.desComplete(timeToChange % 5 == 0):
-                each.reset()
+                # 大飞机出场音效
+                # if each.rect.bottom > 0:
+                #    bigEnemyFlying.play()
+            else:
+                if each.desStart():
+                    bigEnemyFlying.stop()
+                    bigEnemyDown.play()
+                if each.desComplete(timeToChange % 5 == 0):
+                    bigEnemyDown.stop()
+                    each.reset()
             screen.blit(each.getImage(), each.rect)
+
         for each in midEnemys:
             if each.active:
                 each.move()
-            if each.desComplete(timeToChange % 5 == 0):
-                each.reset()
+            else:
+                # 中型飞机摧毁音效未完美
+                if each.desStart():
+                    midEnemyDown.play()
+                if each.desComplete(timeToChange % 5 == 0):
+                    midEnemyDown.stop()
+                    each.reset()
             screen.blit(each.getImage(), each.rect)
+
         for each in smallEnemys:
             if each.active:
                 each.move()
-            if each.desComplete(timeToChange % 5 == 0):
-                each.reset()
+            else:
+                if each.desStart():
+                    smallEnemyDown.play()
+                if each.desComplete(timeToChange % 5 == 0):
+                    smallEnemyDown.stop()
+                    each.reset()
             screen.blit(each.getImage(), each.rect)
+
         screen.blit(me.getImage(), me.rect)
         pygame.display.flip()
 
