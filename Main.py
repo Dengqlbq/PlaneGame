@@ -1,5 +1,6 @@
 import pygame
 from Hero import hero
+from Bullet import bullet
 from Enemy import smallEnemy, midEnemy, bigEnemy
 import sys
 
@@ -7,7 +8,7 @@ pygame.init()
 pygame.mixer.init()
 
 # 背景尺寸及图片
-backGroundSite = (400, 852)
+backGroundSite = (400, 800)
 screen = pygame.display.set_mode(backGroundSite)
 pygame.display.set_caption('PlaneGame')
 backGround = pygame.image.load('Image/background.png').convert()
@@ -43,10 +44,11 @@ def addEnemy(size, group1, group2, number):
 
 def main():
 
-    # 控制飞机数量
+    # 控制飞机数量以及子弹数量
     smallEnemyNum = 10
     midEnemyNum = 5
     bigEnemyNum = 1
+    bulletNum = 6
 
     # 产生飞机
     me = hero(backGroundSite)
@@ -58,16 +60,23 @@ def main():
     addEnemy('mid', midEnemys, enemies, midEnemyNum)
     addEnemy('big', bigEnemys, enemies, bigEnemyNum)
 
-    # 计时器，判断是否切换我方飞机图片以及大型敌机图片
+    # 产生子弹
+    bulletIndex = 0
+    bullets = []
+    for i in range(bulletNum):
+        bullets.append(bullet(me.rect.midtop))
+
+    # 计时器，判断是否切换我方飞机图片,大型敌机图片以及子弹等
     timeToChange = 100
 
+    # 背景音乐开始，游戏主循环开始
     pygame.mixer.music.play(3)
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
 
-        #获取键盘输入
+        # 获取键盘输入
         keyPress = pygame.key.get_pressed()
         if keyPress[pygame.K_UP] or keyPress[pygame.K_w]:
             me.moveUp()
@@ -84,14 +93,33 @@ def main():
             # 加上判断存活的语句反而消耗更多资源，故不管死活直接更改，类内会进行判断
             for each in bigEnemys:
                 each.setStatus()
+        # 发射子弹
+        if timeToChange % 10 == 0:
+            bullets[bulletIndex].reset(me.rect.midtop)
+            bulletIndex = (bulletIndex + 1) % bulletNum
         if timeToChange == 0:
             timeToChange = 100
 
+        # 判断我方飞机是否被撞
         enemiesDown = pygame.sprite.spritecollide(me, enemies, False, pygame.sprite.collide_mask)
         for each in enemiesDown:
             each.active = False
 
         screen.blit(backGround, (0, 0))
+
+        # 判断是否命中敌机
+        for each in bullets:
+            if each.active:
+                each.move()
+                screen.blit(each.getImage(), each.rect)
+                enemiesHit = pygame.sprite.spritecollide(each, enemies, False, pygame.sprite.collide_mask)
+                if len(enemiesHit) > 0:
+                    each.active = False
+                    for n in enemiesHit:
+                        if n in midEnemys or n in bigEnemys:
+                            n.energyFall()
+                        else:
+                            n.active = False
 
         # 飞机绘制顺序，大-》中-》小
         for each in bigEnemys:

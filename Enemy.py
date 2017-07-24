@@ -58,6 +58,7 @@ class midEnemy(pygame.sprite.Sprite):
         self.bgWidth, self.bgHeight = backGroundSite
         self.speed = 2
         self.active = True
+        self.energy = 8
         self.destroyIndex = 0
         self.mask = pygame.mask.from_surface(self.image)
         self.destroy = [
@@ -71,6 +72,7 @@ class midEnemy(pygame.sprite.Sprite):
 
     def reset(self):
         self.active = True
+        self.energy = 8
         self.destroyIndex = 0
         self.rect.left, self.rect.top = random.randint(0, self.bgWidth - self.rect.width),\
                                         random.randint(-1 * self.bgHeight, 0)
@@ -80,6 +82,11 @@ class midEnemy(pygame.sprite.Sprite):
             self.rect.top += self.speed
         else:
             self.reset()
+
+    def energyFall(self):
+        self.energy -= 1
+        if not self.energy:
+            self.active = False
 
     def desStart(self):
         return self.destroyIndex == 0
@@ -107,6 +114,7 @@ class bigEnemy(pygame.sprite.Sprite):
         self.speed = 1
         self.status = True
         self.active = True
+        self.energy = 16
         self.mask = pygame.mask.from_surface(self.image1)
         self.destroyIndex = 0
         self.destroy = [
@@ -122,6 +130,7 @@ class bigEnemy(pygame.sprite.Sprite):
 
     def reset(self):
         self.active = True
+        self.energy = 16
         self.destroyIndex = -1
         self.rect.left, self.rect.top = random.randint(0, self.bgWidth - self.rect.width),\
                                         random.randint(-2 * self.bgHeight, 0)
@@ -131,6 +140,10 @@ class bigEnemy(pygame.sprite.Sprite):
             self.rect.top += self.speed
         else:
             self.reset()
+    def energyFall(self):
+        self.energy -= 1
+        if not self.energy:
+            self.active = False
 
     def setStatus(self):
         self.status = not self.status
