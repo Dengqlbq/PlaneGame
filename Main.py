@@ -4,6 +4,7 @@ from Bullet import bullet
 from Enemy import smallEnemy, midEnemy, bigEnemy
 import sys
 
+# 游戏初始化
 pygame.init()
 pygame.mixer.init()
 
@@ -28,7 +29,7 @@ bigEnemyFlying = pygame.mixer.Sound('Sound/big_enemy_flying.ogg')
 bigEnemyFlying.set_volume(2)
 
 
-# 将飞机加入碰撞组
+# 将飞机加入相应的碰撞组
 
 def addEnemy(size, group1, group2, number):
     for n in range(number):
@@ -49,6 +50,11 @@ def main():
     midEnemyNum = 5
     bigEnemyNum = 1
     bulletNum = 6
+
+    # 血槽颜色
+    black = (0, 0, 0)
+    green = (0, 255, 0)
+    red = (255, 0, 0)
 
     # 产生飞机
     me = hero(backGroundSite)
@@ -93,7 +99,8 @@ def main():
             # 加上判断存活的语句反而消耗更多资源，故不管死活直接更改，类内会进行判断
             for each in bigEnemys:
                 each.setStatus()
-        # 发射子弹
+
+        # 每10帧发射一颗子弹
         if timeToChange % 10 == 0:
             bullets[bulletIndex].reset(me.rect.midtop)
             bulletIndex = (bulletIndex + 1) % bulletNum
@@ -128,6 +135,19 @@ def main():
                 # 大飞机出场音效
                 # if each.rect.bottom > 0:
                 #    bigEnemyFlying.play()
+
+                # 绘制大型敌机血槽
+                pygame.draw.line(screen, black, (each.rect.left, each.rect.top - 5),
+                                                (each.rect.right, each.rect.top - 5),
+                                                  2)
+                energyRemain = each.energy / bigEnemy.bigEnergy
+                if energyRemain > 0.3:
+                    energyColor = green
+                else:
+                    energyColor = red
+                pygame.draw.line(screen, energyColor, (each.rect.left, each.rect.top - 5),
+                                                      (each.rect.left + each.rect.width * energyRemain, each.rect.top - 5),
+                                                        2)
             else:
                 if each.desStart():
                     bigEnemyFlying.stop()
@@ -140,6 +160,18 @@ def main():
         for each in midEnemys:
             if each.active:
                 each.move()
+                # 绘制中型敌机血槽
+                pygame.draw.line(screen, black, (each.rect.left, each.rect.top - 5),
+                                                (each.rect.right, each.rect.top - 5),
+                                                  2)
+                energyRemain = each.energy / midEnemy.midEnergy
+                if energyRemain > 0.3:
+                    energyColor = green
+                else:
+                    energyColor = red
+                pygame.draw.line(screen, energyColor, (each.rect.left, each.rect.top - 5),
+                                                      (each.rect.left + each.rect.width * energyRemain, each.rect.top - 5),
+                                                        2)
             else:
                 # 中型飞机摧毁音效未完美
                 if each.desStart():
