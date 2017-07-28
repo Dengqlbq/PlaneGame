@@ -8,11 +8,9 @@ import sys
 pygame.init()
 pygame.mixer.init()
 
-
-
 # 控制飞机数量以及子弹数量
-smallEnemyNum = 10
-midEnemyNum = 5
+smallEnemyNum = 6
+midEnemyNum = 3
 bigEnemyNum = 1
 bulletNum = 6
 
@@ -31,7 +29,7 @@ screen = pygame.display.set_mode(backGroundSite)
 pygame.display.set_caption('PlaneGame')
 backGround = pygame.image.load('Image/background.png').convert()
 
-# 功能按钮相关图片
+# 功能按钮
 suspend1 = pygame.image.load('Image/suspend1.png').convert_alpha()
 suspend2 = pygame.image.load('Image/suspend2.png').convert_alpha()
 continued1 = pygame.image.load('Image/continued1.png').convert_alpha()
@@ -39,7 +37,7 @@ continued2 = pygame.image.load('Image/continued2.png').convert_alpha()
 pauseRect = suspend1.get_rect()
 pauseRect.left, pauseRect.top = 400 - pauseRect.width - 10, 10
 
-# 主菜单相关图片
+# 主菜单相关
 gameAgain = pygame.image.load('Image/game_again.png').convert_alpha()
 gameAgainRect = gameAgain.get_rect()
 gameAgainRect.left, gameAgainRect.top = (400 - gameAgainRect.width) / 2, 300
@@ -54,7 +52,7 @@ gameQuitRect.left, gameQuitRect.top = (400 - gameQuitRect.width) / 2, 500
 pygame.mixer.music.load('Sound/game_music.ogg')
 pygame.mixer.music.set_volume(3)
 
-# 飞机相关背景音效
+# 飞机相关音效
 smallEnemyDown = pygame.mixer.Sound('Sound/small_enemy_down.ogg')
 smallEnemyDown.set_volume(2)
 midEnemyDown = pygame.mixer.Sound('Sound/mid_enemy_down.ogg')
@@ -64,8 +62,12 @@ bigEnemyDown.set_volume(3)
 bigEnemyFlying = pygame.mixer.Sound('Sound/big_enemy_flying.ogg')
 bigEnemyFlying.set_volume(2)
 
+# 等级（难度）提升特效
+upgrade = pygame.mixer.Sound('Sound/upgrade.ogg')
+upgrade.set_volume(3)
 
 # 将飞机加入相应的碰撞组
+
 
 def addEnemy(size, group1, group2, number):
     for n in range(number):
@@ -78,13 +80,23 @@ def addEnemy(size, group1, group2, number):
         group1.add(e)
         group2.add(e)
 
+# 增加飞机速度
+
+
+def addSpeeds(group):
+    for each in group:
+        each.addSpeed()
+
 
 def main():
 
-    # 是否暂停
+    # 是否暂停，以及暂停相关按钮图片
     isPause = False
-    score = 0
     pauseImage = suspend1
+
+    # 游戏分数以及等级
+    score = 0
+    level = 1
 
     # 产生飞机
     me = hero(backGroundSite)
@@ -102,7 +114,7 @@ def main():
     for i in range(bulletNum):
         bullets.append(bullet(me.rect.midtop))
 
-    # 计时器，判断是否切换我方飞机图片,大型敌机图片以及子弹等
+    # 计时器，判断是否切换我方飞机图片,大型敌机图片以及发射子弹等
     timeToChange = 100
 
     # 背景音乐开始，游戏主循环开始
@@ -141,6 +153,18 @@ def main():
                 me.moveLeft()
             if keyPress[pygame.K_RIGHT] or keyPress[pygame.K_d]:
                 me.moveRight()
+
+            # 提升等级（难度）
+            if level == 1 and score > 50000:
+                level = 2
+                upgrade.play()
+                addEnemy('small', smallEnemys, enemies, 3)
+                addEnemy('mid', midEnemys, enemies, 2)
+                addEnemy('big', bigEnemys, enemies, 1)
+            elif level == 2 and score > 200000:
+                level = 3
+                upgrade.play()
+                addSpeeds(enemies)
 
             timeToChange -= 1
             if timeToChange % 5 == 0:
@@ -245,6 +269,7 @@ def main():
                 screen.blit(each.getImage(), each.rect)
 
             screen.blit(me.getImage(), me.rect)
+        # 暂停状态显示主菜单
         else:
             screen.blit(backGround, (0, 0))
             screen.blit(gameAgain, gameAgainRect)

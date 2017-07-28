@@ -20,19 +20,22 @@ class smallEnemy(pygame.sprite.Sprite):
             pygame.image.load('Image/small_enemy_down4.png').convert_alpha()
         ]
         self.rect.left, self.rect.top = random.randint(0, self.bgWidth - self.rect.width),\
-                                        random.randint(-0.5 * self.bgHeight, 0)
+                                        random.randint(-1 * self.bgHeight, -10)
 
     def reset(self):
         self.active = True
         self.destroyIndex = 0
         self.rect.left, self.rect.top = random.randint(0, self.bgWidth - self.rect.width),\
-                                        random.randint(-0.5 * self.bgHeight, 0)
+                                        random.randint(-1 * self.bgHeight, -10)
 
     def move(self):
         if self.rect.top < self.bgHeight:
             self.rect.top += self.speed
         else:
             self.reset()
+
+    def addSpeed(self):
+        self.speed += 1
 
     def desStart(self):
         return self.destroyIndex == 0
@@ -72,7 +75,7 @@ class midEnemy(pygame.sprite.Sprite):
             pygame.image.load('Image/mid_enemy_down4.png').convert_alpha()
         ]
         self.rect.left, self.rect.top = random.randint(0, self.bgWidth - self.rect.width),\
-                                        random.randint(-1 * self.bgHeight, 0)
+                                        random.randint(-2 * self.bgHeight, -10)
 
     def reset(self):
         self.active = True
@@ -80,13 +83,16 @@ class midEnemy(pygame.sprite.Sprite):
         self.energy = 8
         self.destroyIndex = 0
         self.rect.left, self.rect.top = random.randint(0, self.bgWidth - self.rect.width),\
-                                        random.randint(-1 * self.bgHeight, 0)
+                                        random.randint(-2 * self.bgHeight, -10)
 
     def move(self):
         if self.rect.top < self.bgHeight:
             self.rect.top += self.speed
         else:
             self.reset()
+
+    def addSpeed(self):
+        self.speed += 1
 
     def energyFall(self):
         self.energy -= 1
@@ -140,7 +146,7 @@ class bigEnemy(pygame.sprite.Sprite):
             pygame.image.load('Image/big_enemy_down6.png').convert_alpha()
         ]
         self.rect.left, self.rect.top = random.randint(0, self.bgWidth - self.rect.width),\
-                                        random.randint(-2 * self.bgHeight, 0)
+                                        random.randint(-4 * self.bgHeight, -10)
 
     def reset(self):
         self.active = True
@@ -148,13 +154,16 @@ class bigEnemy(pygame.sprite.Sprite):
         self.energy = 16
         self.destroyIndex = -1
         self.rect.left, self.rect.top = random.randint(0, self.bgWidth - self.rect.width),\
-                                        random.randint(-2 * self.bgHeight, 0)
+                                        random.randint(-4 * self.bgHeight, -10)
 
     def move(self):
         if self.rect.top < self.bgHeight:
             self.rect.top += self.speed
         else:
             self.reset()
+
+    def addSpeed(self):
+        self.speed += 1
 
     def energyFall(self):
         self.energy -= 1
