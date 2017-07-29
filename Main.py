@@ -1,7 +1,9 @@
 import pygame
+import random
 from Hero import hero
 from Bullet import bullet
 from Enemy import smallEnemy, midEnemy, bigEnemy
+from Supply import bomb
 import sys
 
 # 游戏初始化
@@ -21,7 +23,7 @@ red = (255, 0, 0)
 white = (255, 255, 255)
 
 # 游戏字体
-scoreFont = pygame.font.Font('Font/font.ttc', 36)
+font = pygame.font.Font('Font/font.ttc', 36)
 
 # 背景图片及尺寸
 backGroundSite = (400, 800)
@@ -66,6 +68,13 @@ bigEnemyFlying.set_volume(2)
 upgrade = pygame.mixer.Sound('Sound/upgrade.ogg')
 upgrade.set_volume(3)
 
+# 补给图片及音效
+bombNumImage = pygame.image.load('Image/bomb_num.png').convert_alpha()
+bombNumRect = bombNumImage.get_rect()
+bombNumRect.left, bombNumRect.top = 0, backGroundSite[1] - bombNumRect.height - 10
+getBomb = pygame.mixer.Sound('Sound/get_bomb.ogg')
+useBomb = pygame.mixer.Sound('Sound/use_bomb.ogg')
+
 # 将飞机加入相应的碰撞组
 
 
@@ -93,6 +102,13 @@ def main():
     # 是否暂停，以及暂停相关按钮图片
     isPause = False
     pauseImage = suspend1
+
+    # 补给控制
+    pygame.time.set_timer(pygame.USEREVENT, 30000)
+    bombNum = 3
+
+    # 产生补给
+    bom = bomb(backGroundSite)
 
     # 游戏分数以及等级
     score = 0
@@ -140,6 +156,15 @@ def main():
                         pauseImage = continued1
                     else:
                         pauseImage = suspend1
+            elif event.type == pygame.USEREVENT:
+                bom.active = True
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if bombNum > 0:
+                        bombNum -= 1
+                        for each in enemies:
+                            if each.rect.bottom > 0:
+                                each.active = False
 
         if not isPause:
 
@@ -179,6 +204,16 @@ def main():
                 bulletIndex = (bulletIndex + 1) % bulletNum
             if timeToChange == 0:
                 timeToChange = 100
+
+            # 判读是否得到全屏炸弹
+            if bom.active:
+                if pygame.sprite.collide_mask(bom, me):
+                    bom.reset()
+                    if bombNum < 3:
+                        bombNum += 1
+                        getBomb.play()
+                else:
+                    bom.move()
 
             # 判断我方飞机是否被撞
             enemiesDown = pygame.sprite.spritecollide(me, enemies, False, pygame.sprite.collide_mask)
@@ -268,6 +303,12 @@ def main():
                         each.reset()
                 screen.blit(each.getImage(), each.rect)
 
+            # 绘制全屏炸弹相关
+            if bom.active:
+                screen.blit(bom.getImage(), bom.rect)
+            bombNumText = font.render('x %d' % bombNum, True, white)
+            screen.blit(bombNumImage, bombNumRect)
+            screen.blit(bombNumText, (0 + bombNumRect.width, backGroundSite[1] - bombNumRect.height - 10))
             screen.blit(me.getImage(), me.rect)
         # 暂停状态显示主菜单
         else:
@@ -276,7 +317,8 @@ def main():
             screen.blit(gameContinue, gameContinueRect)
             screen.blit(gameQuit, gameQuitRect)
 
-        scoreText = scoreFont.render('Score:%s' % str(score), True, white)
+        # 绘制分数及暂停相关按钮
+        scoreText = font.render('Score:%s' % str(score), True, white)
         screen.blit(scoreText, (0, 0))
         screen.blit(pauseImage, pauseRect)
         pygame.display.flip()
