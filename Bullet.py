@@ -1,5 +1,6 @@
 import pygame
 
+
 class bullet(pygame.sprite.Sprite):
 
     def __init__(self, heroPositon):
@@ -21,7 +22,12 @@ class bullet(pygame.sprite.Sprite):
         self.active = True
         self.rect.left, self.rect.top = heroPosition
 
-    def getImage(self):
-        return self.image1
+    def getImage(self, normal):
+        if normal:
+            return self.image1
+        else:
+            return self.image2
+
+
 
 

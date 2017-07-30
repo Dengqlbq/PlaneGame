@@ -3,7 +3,7 @@ import random
 from Hero import hero
 from Bullet import bullet
 from Enemy import smallEnemy, midEnemy, bigEnemy
-from Supply import bomb
+from Supply import bomb, missile
 import sys
 
 # 游戏初始化
@@ -15,6 +15,7 @@ smallEnemyNum = 6
 midEnemyNum = 3
 bigEnemyNum = 1
 bulletNum = 6
+missileNum = 7
 
 # 血槽颜色及分数字体颜色
 black = (0, 0, 0)
@@ -68,11 +69,19 @@ bigEnemyFlying.set_volume(2)
 upgrade = pygame.mixer.Sound('Sound/upgrade.ogg')
 upgrade.set_volume(3)
 
+# 补给事件ID及子弹补给相关定义
+SUPPLY = pygame.USEREVENT
+MISSLE_OVER = pygame.USEREVENT + 1
+NORMAL = True
+ADVANCED = False
+
 # 补给图片及音效
 bombNumImage = pygame.image.load('Image/bomb_num.png').convert_alpha()
 bombNumRect = bombNumImage.get_rect()
 bombNumRect.left, bombNumRect.top = 0, backGroundSite[1] - bombNumRect.height - 10
+giveSupply = pygame.mixer.Sound('Sound/give_supply.ogg')
 getBomb = pygame.mixer.Sound('Sound/get_bomb.ogg')
+getMissile = pygame.mixer.Sound('Sound/get_missile.ogg')
 useBomb = pygame.mixer.Sound('Sound/use_bomb.ogg')
 
 # 将飞机加入相应的碰撞组
@@ -104,11 +113,13 @@ def main():
     pauseImage = suspend1
 
     # 补给控制
-    pygame.time.set_timer(pygame.USEREVENT, 30000)
+    pygame.time.set_timer(SUPPLY, 30000)
     bombNum = 3
+    isMissile = False
 
     # 产生补给
     bom = bomb(backGroundSite)
+    misle = missile(backGroundSite)
 
     # 游戏分数以及等级
     score = 0
@@ -130,6 +141,13 @@ def main():
     for i in range(bulletNum):
         bullets.append(bullet(me.rect.midtop))
 
+    # 产生超级子弹
+    missileIndex = 0
+    missiles = []
+    for i in range(missileNum):
+        missiles.append(bullet((me.rect.centerx - 33, me.rect.centery)))
+        missiles.append(bullet((me.rect.centerx + 30, me.rect.centery)))
+
     # 计时器，判断是否切换我方飞机图片,大型敌机图片以及发射子弹等
     timeToChange = 100
 
@@ -145,6 +163,14 @@ def main():
                 else:
                     pauseImage = continued1
                 isPause = not isPause
+                if isPause:
+                    pygame.time.set_timer(pygame.USEREVENT, 0)
+                    pygame.mixer.music.pause()
+                    pygame.mixer.pause()
+                else:
+                    pygame.time.set_timer(pygame.USEREVENT, 30000)
+                    pygame.mixer.music.unpause()
+                    pygame.mixer.unpause()
             elif event.type == pygame.MOUSEMOTION:
                 if pauseRect.collidepoint(event.pos):
                     if isPause:
@@ -157,7 +183,11 @@ def main():
                     else:
                         pauseImage = suspend1
             elif event.type == pygame.USEREVENT:
-                bom.active = True
+                giveSupply.play()
+                if random.choice((True, False)):
+                    bom.active = True
+                else:
+                    misle.active = True
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     if bombNum > 0:
@@ -165,6 +195,10 @@ def main():
                         for each in enemies:
                             if each.rect.bottom > 0:
                                 each.active = False
+            elif event.type == pygame.USEREVENT + 1:
+                pygame.time.set_timer(MISSLE_OVER, 0)
+                misle.active = False
+                isMissile = False
 
         if not isPause:
 
@@ -200,8 +234,13 @@ def main():
 
             # 每10帧发射一颗子弹
             if timeToChange % 10 == 0:
-                bullets[bulletIndex].reset(me.rect.midtop)
-                bulletIndex = (bulletIndex + 1) % bulletNum
+                if isMissile:
+                    missiles[2 * missileIndex].reset((me.rect.centerx - 33, me.rect.centery))
+                    missiles[2 * missileIndex + 1].reset((me.rect.centerx + 30, me.rect.centery))
+                    missileIndex = (missileIndex + 1) % missileNum
+                else:
+                    bullets[bulletIndex].reset(me.rect.midtop)
+                    bulletIndex = (bulletIndex + 1) % bulletNum
             if timeToChange == 0:
                 timeToChange = 100
 
@@ -215,6 +254,19 @@ def main():
                 else:
                     bom.move()
 
+            # 判读是否得到超级子弹
+            if misle.active:
+                if pygame.sprite.collide_mask(misle, me):
+                    misle.reset()
+                    isMissile = True
+                    getMissile.play()
+                    pygame.time.set_timer(MISSLE_OVER, 18000)
+                    # 获得超级子弹补给后，原来超级子弹的存活状态置False，避免记忆之前的位置导致子弹错位
+                    for each in missiles:
+                        each.active = False
+                else:
+                    misle.move()
+
             # 判断我方飞机是否被撞
             enemiesDown = pygame.sprite.spritecollide(me, enemies, False, pygame.sprite.collide_mask)
             for each in enemiesDown:
@@ -222,19 +274,33 @@ def main():
 
             screen.blit(backGround, (0, 0))
 
-            # 判断是否命中敌机
-            for each in bullets:
-                if each.active:
-                    each.move()
-                    screen.blit(each.getImage(), each.rect)
-                    enemiesHit = pygame.sprite.spritecollide(each, enemies, False, pygame.sprite.collide_mask)
-                    if len(enemiesHit) > 0:
-                        each.active = False
-                        for n in enemiesHit:
-                            if n in midEnemys or n in bigEnemys:
-                                n.energyFall()
-                            else:
-                                n.active = False
+            # 判断普通子弹（或超级子弹）否命中敌机
+            if isMissile:
+                for each in missiles:
+                    if each.active:
+                        each.move()
+                        screen.blit(each.getImage(ADVANCED), each.rect)
+                        enemiesHit = pygame.sprite.spritecollide(each, enemies, False, pygame.sprite.collide_mask)
+                        if len(enemiesHit) > 0:
+                            each.active = False
+                            for n in enemiesHit:
+                                if n in midEnemys or n in bigEnemys:
+                                    n.energyFall()
+                                else:
+                                    n.active = False
+            else:
+                for each in bullets:
+                    if each.active:
+                        each.move()
+                        screen.blit(each.getImage(NORMAL), each.rect)
+                        enemiesHit = pygame.sprite.spritecollide(each, enemies, False, pygame.sprite.collide_mask)
+                        if len(enemiesHit) > 0:
+                            each.active = False
+                            for n in enemiesHit:
+                                if n in midEnemys or n in bigEnemys:
+                                    n.energyFall()
+                                else:
+                                    n.active = False
 
             # 飞机绘制顺序，大-》中-》小
             for each in bigEnemys:
@@ -309,6 +375,11 @@ def main():
             bombNumText = font.render('x %d' % bombNum, True, white)
             screen.blit(bombNumImage, bombNumRect)
             screen.blit(bombNumText, (0 + bombNumRect.width, backGroundSite[1] - bombNumRect.height - 10))
+
+            # 绘制超级子弹补给
+            if misle.active:
+                screen.blit(misle.getImage(), misle.rect)
+
             screen.blit(me.getImage(), me.rect)
         # 暂停状态显示主菜单
         else:
