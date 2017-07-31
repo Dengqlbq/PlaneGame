@@ -8,22 +8,23 @@ class hero(pygame.sprite.Sprite):
         self.image2 = pygame.image.load('Image/hero2.png').convert_alpha()
         self.status = True
         self.speed = 10
+        self.active = True
         self.mask = pygame.mask.from_surface(self.image1)
         self.rect = self.image1.get_rect()
         self.bgWidth, self.bgHeight = backGroundSite
         self.rect.left, self.rect.top = (self.bgWidth - self.rect.width)/2, self.bgHeight - self.rect.height - 60
-
-    def getImage(self):
-        if self.status:
-            return self.image1
-        else:
-            return self.image2
+        self.destroyIndex = 0
+        self.destroy = [
+            pygame.image.load('Image/hero_down1.png').convert_alpha(),
+            pygame.image.load('Image/hero_down2.png').convert_alpha(),
+            pygame.image.load('Image/hero_down3.png').convert_alpha(),
+            pygame.image.load('Image/hero_down4.png').convert_alpha()
+        ]
 
     def setStatus(self):
         self.status = not self.status
 
-     #移动方法中可能移动后超出范围
-
+     # 移动方法中可能移动后超出范围
     def moveUp(self):
         if self.rect.top > 0:
             self.rect.top -= 10
@@ -48,3 +49,24 @@ class hero(pygame.sprite.Sprite):
         else:
             self.rect.right = self.bgWidth
 
+    def reset(self):
+        self.active = True
+        self.destroyIndex = 0
+        self.rect.left, self.rect.top = (self.bgWidth - self.rect.width)/2, self.bgHeight - self.rect.height - 60
+
+    def desStart(self):
+        return self.destroyIndex == 0
+
+    def desComplete(self, desChange=False):
+        if desChange and not self.active:
+            self.destroyIndex += 1
+        return self.destroyIndex == 4
+
+    def getImage(self):
+        if self.active:
+            if self.status:
+                return self.image1
+            else:
+                return self.image2
+        else:
+            return self.destroy[self.destroyIndex]
