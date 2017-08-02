@@ -9,6 +9,7 @@ class hero(pygame.sprite.Sprite):
         self.status = True
         self.speed = 10
         self.active = True
+        self.unrivalled = False
         self.mask = pygame.mask.from_surface(self.image1)
         self.rect = self.image1.get_rect()
         self.bgWidth, self.bgHeight = backGroundSite
@@ -51,6 +52,7 @@ class hero(pygame.sprite.Sprite):
 
     def reset(self):
         self.active = True
+        self.unrivalled = True
         self.destroyIndex = 0
         self.rect.left, self.rect.top = (self.bgWidth - self.rect.width)/2, self.bgHeight - self.rect.height - 60
 

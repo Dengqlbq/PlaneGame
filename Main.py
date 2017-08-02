@@ -24,7 +24,7 @@ red = (255, 0, 0)
 white = (255, 255, 255)
 
 # 游戏字体
-font = pygame.font.Font('Font/font.ttc', 36)
+font = pygame.font.Font('Font/font.ttc', 40)
 
 # 背景图片及尺寸
 backGroundSite = (400, 800)
@@ -52,6 +52,12 @@ gameQuit = pygame.image.load('Image/game_quit.png').convert_alpha()
 gameQuitRect = gameQuit.get_rect()
 gameQuitRect.left, gameQuitRect.top = (400 - gameQuitRect.width) / 2, 500
 
+# 结束菜单相关
+gameAgainTwoRect = gameAgain.get_rect()
+gameAgainTwoRect.left, gameAgainTwoRect.top = (400 - gameAgainTwoRect.width) / 2, 500
+gameQuitTwoRect = gameQuit.get_rect()
+gameQuitTwoRect.left, gameQuitTwoRect.top = (400 - gameQuitTwoRect.width) / 2, 600
+
 # 背景音乐，不支持MP3用OGG格式
 pygame.mixer.music.load('Sound/game_music.ogg')
 pygame.mixer.music.set_volume(3)
@@ -71,6 +77,9 @@ heroDown.set_volume(3)
 # 等级（难度）提升特效
 upgrade = pygame.mixer.Sound('Sound/upgrade.ogg')
 upgrade.set_volume(3)
+
+# 无敌状态
+UNRIVALLED = pygame.USEREVENT + 2
 
 # 补给事件ID及子弹补给相关定义
 SUPPLY = pygame.USEREVENT
@@ -171,20 +180,31 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and pauseRect.collidepoint(event.pos):
-                if isPause:
-                    pauseImage = suspend1
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # 以下功能按钮假设用户处了在暂停和结束时不使用鼠标点击游戏界面，否则出bug
+
+                # 主菜单的功能按钮
+                if running:
+                    if pauseRect.collidepoint(event.pos) or gameContinueRect.collidepoint(event.pos):
+                        if isPause:
+                            pauseImage = suspend1
+                        else:
+                            pauseImage = continued1
+                        isPause = not isPause
+                        if isPause:
+                            pygame.time.set_timer(pygame.USEREVENT, 0)
+                            pygame.mixer.music.pause()
+                            pygame.mixer.pause()
+                        else:
+                            pygame.time.set_timer(pygame.USEREVENT, 30000)
+                            pygame.mixer.music.unpause()
+                            pygame.mixer.unpause()
+                    elif gameQuitRect.collidepoint(event.pos):
+                        sys.exit()
+                # 结束菜单的功能按钮
                 else:
-                    pauseImage = continued1
-                isPause = not isPause
-                if isPause:
-                    pygame.time.set_timer(pygame.USEREVENT, 0)
-                    pygame.mixer.music.pause()
-                    pygame.mixer.pause()
-                else:
-                    pygame.time.set_timer(pygame.USEREVENT, 30000)
-                    pygame.mixer.music.unpause()
-                    pygame.mixer.unpause()
+                    if gameQuitTwoRect.collidepoint(event.pos):
+                        sys.exit()
             elif event.type == pygame.MOUSEMOTION:
                 if pauseRect.collidepoint(event.pos):
                     if isPause:
@@ -209,10 +229,13 @@ def main():
                         for each in enemies:
                             if each.rect.bottom > 0:
                                 each.active = False
-            elif event.type == pygame.USEREVENT + 1:
+            elif event.type == MISSLE_OVER:
                 pygame.time.set_timer(MISSLE_OVER, 0)
                 misle.active = False
                 isMissile = False
+            elif event.type == UNRIVALLED:
+                pygame.time.set_timer(UNRIVALLED, 0)
+                me.unrivalled = False
 
         if not isPause and running:
 
@@ -282,7 +305,7 @@ def main():
                     misle.move()
 
             # 判断我方飞机是否被撞
-            if me.active:
+            if me.active and not me.unrivalled:
                 enemiesDown = pygame.sprite.spritecollide(me, enemies, False, pygame.sprite.collide_mask)
                 if len(enemiesDown) > 0:
                     me.active = False
@@ -391,8 +414,11 @@ def main():
                     heroDown.play()
                 if me.desComplete(timeToChange % 5 == 0):
                     me.reset()
+                    pygame.time.set_timer(UNRIVALLED, 3000)
                     if life == 0:
                         running = False
+                        # 直接使用pygame.mixer.pause()无法关闭背景音效
+                        pygame.time.set_timer(SUPPLY, 0)
             screen.blit(me.getImage(), me.rect)
 
             heroLifeText = font.render(' x %d ' % life, True, white)
@@ -425,8 +451,11 @@ def main():
                 screen.blit(gameQuit, gameQuitRect)
             else:
                 screen.blit(gameOverBackGround, (0, 0))
-                scoreText = font.render('此处尚未完成', True, white)
-                screen.blit(scoreText, (200, 180))
+                scoreText = font.render(' %s ' % str(score), True, white)
+                scoreTextRect = scoreText.get_rect()
+                screen.blit(gameAgain, gameAgainTwoRect)
+                screen.blit(gameQuit, gameQuitTwoRect)
+                screen.blit(scoreText, ((backGroundSite[0] - scoreTextRect.width) / 2, 400))
 
         pygame.display.flip()
 
