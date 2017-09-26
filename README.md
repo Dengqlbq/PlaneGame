@@ -4,4 +4,19 @@
 1. Python 3.6
 2. pygame
 
-[Watch the vedio](http://player.youku.com/player.php/sid/XMjk0MzYzMjMzNg==/v.swf)
+---
+### How to play ?
+```
+git clone 
+```
+```
+cd PlaneGame
+```
+```
+python3 Main.py
+```
+#### 游戏界面<br>
+
+![1](https://github.com/Dengqlbq/PlaneGame/blob/master/Show/13.png)
+
+![2](https://github.com/Dengqlbq/PlaneGame/blob/master/Show/12.png)
