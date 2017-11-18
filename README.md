@@ -17,7 +17,7 @@ python3 Main.py
 ```
 
 ---
-### 图片展示:<br>
+### Image show:<br>
 
 ![1](https://github.com/Dengqlbq/PlaneGame/blob/master/Show/13.png)
 
