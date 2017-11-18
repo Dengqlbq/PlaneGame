@@ -7,7 +7,7 @@
 ---
 ### How to play ?
 ```
-git clone https://github.com/Dengqlbq/PlaneGame
+git clone https://github.com/Dengqlbq/PlaneGame.git
 ```
 ```
 cd PlaneGame
